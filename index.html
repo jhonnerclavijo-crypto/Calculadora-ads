@@ -54,11 +54,6 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      transform: scale(1.03);
     }
 
     .results {
@@ -87,13 +82,21 @@
       font-size: 16px;
       font-weight: bold;
     }
+
+    .recommendation {
+      margin-top: 15px;
+      padding: 12px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
 <body>
 
 <div class="container">
-  <h2>🍔 Calculadora Ads para Restaurantes</h2>
+  <h2>🍔 Calculadora Ads</h2>
 
   <label>Presupuesto Ads ($)</label>
   <input type="number" id="presupuesto">
@@ -107,17 +110,23 @@
   <label>Ticket promedio ($)</label>
   <input type="number" id="ticket">
 
-  <button onclick="calcular()">Calcular resultados</button>
+  <button onclick="calcular()">Calcular</button>
 
   <div class="results" id="results"></div>
   <div class="status" id="status"></div>
+  <div class="recommendation" id="recommendation"></div>
 </div>
 
 <script>
+function formatoCOP(num) {
+  return num.toLocaleString('es-CO');
+}
+
 function calcular() {
   let presupuesto = parseFloat(document.getElementById("presupuesto").value);
   let cpc = parseFloat(document.getElementById("cpc").value);
-  let conversion = parseFloat(document.getElementById("conversion").value) / 100;
+  let conversionInput = parseFloat(document.getElementById("conversion").value);
+  let conversion = conversionInput / 100;
   let ticket = parseFloat(document.getElementById("ticket").value);
 
   if (!presupuesto || !cpc || !conversion || !ticket) {
@@ -130,24 +139,48 @@ function calcular() {
   let ventas = pedidos * ticket;
   let roas = ventas / presupuesto;
 
+  // Conversión mínima para no perder dinero
+  let conversionMin = cpc / ticket; // ROAS = 1
+
   let statusText = "";
   if (roas < 1) {
-    statusText = "❌ Estás perdiendo dinero en publicidad";
-  } else if (roas >= 1 && roas < 3) {
-    statusText = "⚠️ Puedes optimizar tus campañas";
+    statusText = "❌ Estás perdiendo dinero";
+  } else if (roas < 3) {
+    statusText = "⚠️ Puedes optimizar";
   } else {
-    statusText = "🔥 Campaña rentable, puedes escalar";
+    statusText = "🔥 Rentable, escala";
   }
 
   document.getElementById("results").innerHTML = `
     <div class="card">Clics<br><strong>${clics.toFixed(0)}</strong></div>
     <div class="card">Pedidos<br><strong>${pedidos.toFixed(0)}</strong></div>
-    <div class="card">Ventas<br><strong>$${ventas.toLocaleString()}</strong></div>
+    <div class="card">Ventas<br><strong>$${formatoCOP(ventas)}</strong></div>
     <div class="card">ROAS<br><strong>${roas.toFixed(2)}x</strong></div>
-    <div class="card big">Inversión: $${presupuesto.toLocaleString()}</div>
+    <div class="card big">Inversión: $${formatoCOP(presupuesto)}</div>
   `;
 
   document.getElementById("status").innerText = statusText;
+
+  // Recomendación inteligente
+  let conversionMinPct = (conversionMin * 100).toFixed(2);
+
+  let mensaje = "";
+
+  if (conversion < conversionMin) {
+    mensaje = `
+    Tu conversión actual es <strong>${conversionInput}%</strong><br>
+    Para no perder dinero necesitas mínimo <strong>${conversionMinPct}%</strong><br><br>
+    👉 Debes mejorar tu página, oferta o anuncios.
+    `;
+  } else {
+    mensaje = `
+    Tu conversión actual es <strong>${conversionInput}%</strong><br>
+    Estás por encima del mínimo (${conversionMinPct}%)<br><br>
+    🚀 Puedes escalar inversión con este presupuesto.
+    `;
+  }
+
+  document.getElementById("recommendation").innerHTML = mensaje;
 }
 </script>
 
